@@ -6,6 +6,38 @@
 #include "string.h"
 #include "configchain.h"
 
+
+
+/*
+
+node 0 parsuje config
+dostaje parsing output i na jego podstawie przesyła dalej
+
+node 0 przesyła liczbę routerów (int)
+
+wszystkie node alokują
+tablica int o rozmiarze n_routers (as_map)
+tablica int o rozmiarze n_routers (rozmiary string)
+tablica char* o rozmiarze n_routers
+graf o rozmiarze n_routers
+
+node 0 przesyła as_map
+w pętli każdy node przypisuje miejsce na stringi do pętli (strlen + 1)
+w pętli przesyłane są nazwy do nodeów
+
+przesyłany jest graf
+
+nodey liczą rzeczy i zapisują do plików
+
+free()
+
+
+
+
+*/
+
+
+
 int main()
 {
 

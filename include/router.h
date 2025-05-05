@@ -91,22 +91,33 @@ struct router *generate_routing_info(int as_number, struct graph *src_net, int *
 
 void describe_router(struct router *rtr)
 {
-    printf("Autonomous System %i - %s\n", rtr->as_number, rtr->name);
+
+    char file[128] = "";
+
+    sprintf(file, "./%s%i.txt", "AS", rtr->as_number);
+
+    FILE *fp;
+    fp = fopen(file,"w");
+
+    fprintf(fp, "Autonomous System %i - %s\n", rtr->as_number, rtr->name);
 
     for (int i = 0; i < rtr->tracked_nodes; i++)
     {
         if (i == rtr->next_hop[i] && rtr->as_map[i] != rtr->as_number)
         {
-            printf("UTILIZED PEER %i DIST %i\n", rtr->as_map[i], rtr->distance[i]);
+            fprintf(fp, "UTILIZED PEER %i DIST %i\n", rtr->as_map[i], rtr->distance[i]);
         }
     }
 
-    printf("ROUTING\n");
+    fprintf(fp, "ROUTING\n");
 
     for (int i = 0; i < rtr->tracked_nodes; i++)
     {
-        printf(" AS %i VIA %i DIST %i\n", rtr->as_map[i], rtr->as_map[rtr->next_hop[i]], rtr->distance[i]);
+        if (rtr->as_map[i] == rtr->as_number) continue;
+        fprintf(fp, " AS %i VIA %i DIST %i\n", rtr->as_map[i], rtr->as_map[rtr->next_hop[i]], rtr->distance[i]);
     }
+
+    fclose(fp);
 }
 
 void free_router(struct router *rtr)
