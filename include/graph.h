@@ -1,3 +1,14 @@
+/**
+ * @file graph.h
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief graph implementation for the Bellman-Ford algorithm
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #ifndef GRAPH_H
 #define GRAPH_H
 
@@ -7,12 +18,25 @@
 
 #define NO_CONNECTION 9999
 
+/**
+ * @brief structure representing a graph
+ * 
+ * @param nodes number of nodes in the graph
+ * @param costs array of costs between nodes
+ */
 struct graph
 {
     int nodes;
     int *costs;
 };
 
+/**
+ * @brief structure representing an edge in the graph
+ * 
+ * @param from node from which the edge starts
+ * @param to node to which the edge goes
+ * @param cost cost of the edge
+ */
 struct edge
 {
     int from;
@@ -20,6 +44,14 @@ struct edge
     int cost;
 };
 
+/**
+ * @brief structure representing the output of the parsing function
+ * 
+ * @param node_amount number of nodes in the graph
+ * @param as_map array mapping AS numbers to node IDs
+ * @param names array of names of the nodes
+ * @param netgraph pointer to the graph structure
+ */
 struct parsing_output {
     int node_amount;
     int *as_map;
@@ -37,6 +69,12 @@ COSTS [r0n0 r0n1 r0n2 ... r0nsize r1n0 ... r1nsize ... rsizen0 ... rsizensize]
 // which constructs and destructs and also has some methods
 // Hmmmm... it would probably be an upgrade to C, right?
 
+/**
+ * @brief function initializing a graph
+ * 
+ * @param size number of nodes in the graph
+ * @return struct graph* pointer to the initialized graph
+ */
 struct graph *init_graph(int size)
 {
     struct graph *newGraph = malloc(sizeof(struct graph));
@@ -51,6 +89,12 @@ struct graph *init_graph(int size)
     return newGraph;
 }
 
+/**
+ * @brief function copying a graph
+ * 
+ * @param otherGraph pointer to the graph to be copied
+ * @return struct graph* pointer to the copied graph
+ */
 struct graph *copy_graph(struct graph *otherGraph)
 {
     struct graph *newGraph = malloc(sizeof(struct graph));
@@ -60,32 +104,77 @@ struct graph *copy_graph(struct graph *otherGraph)
     return newGraph;
 }
 
+/**
+ * @brief function setting a bidirectional edge in the graph
+ * 
+ * @param G pointer to the graph
+ * @param node1 first node of the edge
+ * @param node2 second node of the edge
+ * @param cost cost of the edge
+ */
 void set_edge_bidir(struct graph *G, int node1, int node2, int cost)
 {
     G->costs[node1 * G->nodes + node2] = cost;
     G->costs[node2 * G->nodes + node1] = cost;
 }
 
+/**
+ * @brief function setting a node in the graph
+ * 
+ * @param G pointer to the graph
+ * @param node node to be set
+ * @param cost cost of the node
+ */
 void set_node(struct graph *G, int node, int cost)
 {
     G->costs[node * G->nodes + node] = cost;
 }
 
+/**
+ * @brief function getting a node cost
+ * 
+ * @param G pointer to the graph
+ * @param node node to be gotten
+ * @return int cost of the node
+ */
 int get_node(struct graph *G, int node)
 {
     return G->costs[node * G->nodes + node];
 }
 
+/**
+ * @brief function setting an edge cost
+ * 
+ * @param G pointer to the graph
+ * @param node_from first node of the edge
+ * @param node_to second node of the edge
+ * @param cost cost of the edge
+ */
 void set_edge(struct graph *G, int node_from, int node_to, int cost)
 {
     G->costs[node_from * G->nodes + node_to] = cost;
 }
 
+/**
+ * @brief function getting an edge cost
+ * 
+ * @param G pointer to the graph
+ * @param node_from first node of the edge
+ * @param node_to second node of the edge
+ * @return int cost of the edge
+ */
 int get_edge(struct graph *G, int node_from, int node_to)
 {
     return G->costs[node_from * G->nodes + node_to];
 }
 
+/**
+ * @brief function extracting edges from the graph
+ * 
+ * @param G pointer to the graph
+ * @param amount pointer to the number of edges
+ * @return struct edge* pointer to the array of edges
+ */
 struct edge *extract_edges(struct graph *G, int *amount)
 {
     // Count edges first
@@ -126,6 +215,11 @@ struct edge *extract_edges(struct graph *G, int *amount)
     return found;
 }
 
+/**
+ * @brief function printing visual representation of the graph
+ * 
+ * @param G pointer to the graph
+ */
 void print_graph(struct graph *G)
 {
     int graph_size = G->nodes;
@@ -140,6 +234,11 @@ void print_graph(struct graph *G)
     }
 }
 
+/**
+ * @brief function freeing the graph
+ * 
+ * @param G pointer to the graph
+ */
 void free_graph(struct graph *G)
 {
     if (G != NULL)
@@ -149,6 +248,12 @@ void free_graph(struct graph *G)
     }
 }
 
+/**
+ * @brief function getting data from a file
+ * 
+ * @param filename filenanme to be read
+ * @return struct parsing_output* parsed data
+ */
 struct parsing_output * data_from_file(const char * filename)
 {
     struct config_node *cfg = config_from_file(filename);

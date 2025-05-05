@@ -1,3 +1,14 @@
+/**
+ * @file main.c
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief Bellman-Ford distributed implementation using MPI
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #include "mpi.h"
 #include "stdio.h"
 
@@ -9,10 +20,7 @@
 #include "string.h"
 
 
-
-
 /*
-
 node 0 parsuje config
 dostaje parsing output i na jego podstawie przesyła dalej
 
@@ -33,10 +41,6 @@ przesyłany jest graf
 nodey liczą rzeczy i zapisują do plików
 
 free()
-
-
-
-
 */
 
 #define MAX_NODES 100

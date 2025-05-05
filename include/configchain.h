@@ -1,15 +1,41 @@
+/**
+ * @file configchain.h
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief routing configuration chain implementation
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #ifndef CONFIG_CHAIN
 #define CONFIG_CHAIN
 
 #include "stdlib.h"
 #include "stdio.h"
 
+/**
+ * @brief structure representing a peer in the routing configuration
+ * 
+ * @param next pointer to the next peer in the chain
+ * @param as_number AS number of the peer
+ * @param distance distance to the peer
+ */
 struct config_peer {
     struct config_peer *next;
     int as_number;
     int distance;
 };
 
+/**
+ * @brief structure representing a node in the routing configuration
+ * 
+ * @param next pointer to the next node in the chain
+ * @param name name of the node
+ * @param as_number AS number of the node
+ * @param peer_chain pointer to the chain of peers for this node
+ */
 struct config_node {
     struct config_node *next;
     char *name;
@@ -17,6 +43,13 @@ struct config_node {
     struct config_peer *peer_chain;
 };
 
+/**
+ * @brief function to create a new config node
+ * 
+ * @param name name of the node
+ * @param as_number AS number of the node
+ * @return struct config_node* pointer to the new config node
+ */
 struct config_node * new_config_node(char * name, int as_number)
 {
     struct config_node * new_node = (struct config_node*)malloc(sizeof(struct config_node));
@@ -28,6 +61,13 @@ struct config_node * new_config_node(char * name, int as_number)
     return new_node;
 }
 
+/**
+ * @brief function to add a peer to a config node
+ * 
+ * @param node pointer to the config node
+ * @param as_number AS number of the peer
+ * @param distance distance to the peer
+ */
 void add_peer_to_node(struct config_node * node, int as_number, int distance)
 {
     struct config_peer * ptr = node->peer_chain;
@@ -49,6 +89,11 @@ void add_peer_to_node(struct config_node * node, int as_number, int distance)
     return;
 }
 
+/**
+ * @brief function to free the memory allocated for a peer chain
+ * 
+ * @param ptr pointer to the config peer
+ */
 void free_peer_chain (struct config_peer * ptr)
 {
     if (ptr->next != NULL)
@@ -60,6 +105,11 @@ void free_peer_chain (struct config_peer * ptr)
     free(ptr);
 }
 
+/**
+ * @brief function to free the memory allocated for a config node chain
+ * 
+ * @param ptr pointer to the config node
+ */
 void free_node_chain (struct config_node * ptr)
 {
     if (ptr == NULL)
@@ -78,6 +128,11 @@ void free_node_chain (struct config_node * ptr)
     free(ptr);
 }
 
+/**
+ * @brief function to describe/pretty print the peer chain
+ * 
+ * @param ptr pointer to the config peer
+ */
 void describe_peer_node(struct config_peer * ptr) {
     if (ptr->next)
     {
@@ -87,6 +142,11 @@ void describe_peer_node(struct config_peer * ptr) {
     printf("PEER %i %i\n", ptr->as_number, ptr->distance);
 }
 
+/**
+ * @brief function to describe/pretty print the config node chain
+ * 
+ * @param ptr pointer to the config node
+ */
 void describe_config_node(struct config_node * ptr) {
 
     if (ptr == NULL) return;
@@ -104,6 +164,12 @@ void describe_config_node(struct config_node * ptr) {
     }
 }
 
+/**
+ * @brief function to read the configuration from a file
+ * 
+ * @param filename name of the file to be read
+ * @return struct config_node* pointer to the config node chain
+ */
 struct config_node * config_from_file(const char * filename)
 {
     // Prepare the data and open the file
