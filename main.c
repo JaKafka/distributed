@@ -1,3 +1,4 @@
+#include "mpi.h"
 #include "stdio.h"
 #include "graph.h"
 #include "bellford.h"
@@ -6,31 +7,51 @@
 #include "string.h"
 #include "configchain.h"
 
-int main()
+#define MAX_NODES 100
+
+int main(int argc, char **argv)
 {
+    MPI_Init(&argc, &argv);
 
-    struct parsing_output * G = NULL;
-    G = data_from_file();
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    struct parsing_output *G = NULL;
+    int as_map[MAX_NODES];
+    char names[MAX_NODES][50];
+    int costs[MAX_NODES][MAX_NODES];
+    struct netgraph netgraph;
 
-
-    struct router * rtr = generate_routing_info(G->as_map[0], G->netgraph, G->as_map, G->names[0]);
-
-    describe_router(rtr);
-
-
-    free_graph(G->netgraph);
-
-    for (int i = 0; i < G->node_amount; i++)
+    if (rank == 0)
     {
-        free(G->names[i]);
+        struct parsing_output *temp = data_from_file();
+        G.node_amount = temp->node_amount;
+        memcpy(as_map, temp->as_map, G.node_amount * sizeof(int));
+        for (int i = 0; i < G.node_amount; i++) {
+            strncpy(names[i], temp->names[i], 50);
+        }
+        memcpy(costs, temp->netgraph->costs, G.node_amount * G.node_amount * sizeof(int));
+        netgraph.costs = &costs[0][0];
+        netgraph.nodes = temp->netgraph->nodes;
     }
 
-    free_router(rtr);
+    MPI_Bcast(&G.node_amount, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(as_map, MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(names, MAX_NODES * 50, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(costs, MAX_NODES * MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&netgraph.nodes, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    free(G->names);
-    free(G->as_map);
-    free(G);
+    netgraph.costs = &costs[0][0];
 
+    // Each process computes routing information for its assigned nodes
+    for (int i = rank; i < G.node_amount; i += size)
+    {
+        struct router * rtr = generate_routing_info(as_map[i], &netgraph, as_map, names[i]);
+        describe_router(rtr);
+        free_router(rtr);
+    }
+
+    MPI_Finalize();
     return 0;
 }
