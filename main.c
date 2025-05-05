@@ -116,14 +116,23 @@ int main(int argc, char **argv)
     netgraph->nodes = router_count;
 
     // Each process computes routing information for its assigned nodes
-    for (int i = rank; i < G.node_amount; i += size)
+    for (int i = rank; i < router_count; i += size)
     {
-        struct router * rtr = generate_routing_info(as_map[i], &netgraph, as_map, names[i]);
+        struct router * rtr = generate_routing_info(as_map[i], netgraph, as_map, names[i]);
         describe_router(rtr);
         free_router(rtr);
     }
 
     free_graph(netgraph);
+
+    for (int i = 0; i < router_count; i++)
+    {
+        free(names[i]);
+    }
+
+    free(names);
+    free(as_map);
+    free(names_length);
 
     MPI_Finalize();
     return 0;
