@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        struct parsing_output *temp = data_from_file();
+        struct parsing_output *temp = data_from_file(argv[1]);
 
         router_count = temp->node_amount;
         as_map = temp->as_map;

@@ -104,7 +104,7 @@ void describe_config_node(struct config_node * ptr) {
     }
 }
 
-struct config_node * config_from_file()
+struct config_node * config_from_file(const char * filename)
 {
     // Prepare the data and open the file
     FILE *fp;
@@ -113,7 +113,7 @@ struct config_node * config_from_file()
     int read;
     
 
-    fp = fopen("../example_data.txt", "r");
+    fp = fopen(filename, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 

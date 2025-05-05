@@ -149,9 +149,9 @@ void free_graph(struct graph *G)
     }
 }
 
-struct parsing_output * data_from_file()
+struct parsing_output * data_from_file(const char * filename)
 {
-    struct config_node *cfg = config_from_file();
+    struct config_node *cfg = config_from_file(filename);
 
     describe_config_node(cfg);
 
