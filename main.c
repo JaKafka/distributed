@@ -48,32 +48,72 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    struct parsing_output *G = NULL;
-    int as_map[MAX_NODES];
-    char names[MAX_NODES][50];
-    int costs[MAX_NODES][MAX_NODES];
-    struct netgraph netgraph;
+    int router_count;
+    int *as_map = NULL;
+    int *names_length = NULL;
+    char **names = NULL;
+
+    struct graph *netgraph = NULL;
+    
 
     if (rank == 0)
     {
         struct parsing_output *temp = data_from_file();
-        G.node_amount = temp->node_amount;
-        memcpy(as_map, temp->as_map, G.node_amount * sizeof(int));
-        for (int i = 0; i < G.node_amount; i++) {
-            strncpy(names[i], temp->names[i], 50);
+
+        router_count = temp->node_amount;
+        as_map = temp->as_map;
+        names = temp->names;
+
+        names_length = malloc(sizeof(int) * router_count);
+
+        for (int i = 0; i < router_count; i++)
+        {
+            names_length[i] = strlen(names[i]);
         }
-        memcpy(costs, temp->netgraph->costs, G.node_amount * G.node_amount * sizeof(int));
-        netgraph.costs = &costs[0][0];
-        netgraph.nodes = temp->netgraph->nodes;
+
+        netgraph = temp->netgraph;
     }
 
-    MPI_Bcast(&G.node_amount, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(as_map, MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(names, MAX_NODES * 50, MPI_CHAR, 0, MPI_COMM_WORLD);
-    MPI_Bcast(costs, MAX_NODES * MAX_NODES, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&netgraph.nodes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    // Workery muszą wiedzieć ile jest danych do alokacji
+    // addr, count, size, node_id from, comms
+    MPI_Bcast(&router_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    netgraph.costs = &costs[0][0];
+    // Tylko zwykłe workery, nie mają gotowych danych
+    if (as_map == NULL)
+    {
+        as_map = malloc(sizeof(int) * router_count);
+        names_length = malloc(sizeof(int) * router_count);
+        names = malloc(sizeof(char*) * router_count);
+    }
+
+    // Prześlij informacje o rozmiarach nazw oraz mapowanie AS
+    MPI_Bcast(as_map, router_count, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(names_length, router_count, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // Przygotowanie miejsca w workerach na nazwy
+    if (rank != 0)
+    {
+        for (int i = 0; i < router_count; i++)
+        {
+            names[i] = malloc(sizeof(char) * names_length[i] + 1);
+        }
+    }
+
+    // Prześlij nazwy
+    for (int i = 0; i < router_count; i++)
+    {
+        MPI_Bcast(names[i], names_length[i] + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
+    
+    // Prześlij graf
+
+    if (netgraph == NULL)
+    {
+        netgraph = init_graph(router_count);
+    }
+
+    MPI_Bcast(netgraph->costs, router_count * router_count, MPI_INT, 0, MPI_COMM_WORLD);
+    netgraph->nodes = router_count;
 
     // Each process computes routing information for its assigned nodes
     for (int i = rank; i < G.node_amount; i += size)
@@ -82,6 +122,8 @@ int main(int argc, char **argv)
         describe_router(rtr);
         free_router(rtr);
     }
+
+    free_graph(netgraph);
 
     MPI_Finalize();
     return 0;
