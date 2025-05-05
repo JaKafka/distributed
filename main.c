@@ -2,44 +2,35 @@
 #include "graph.h"
 #include "bellford.h"
 #include "router.h"
+#include "stdlib.h"
+#include "string.h"
+#include "configchain.h"
 
-int main() {
+int main()
+{
 
-    struct graph *network = init_graph(5);
-
-    printf("Hello world\n");
-
-
-    // Each node gets an AS number depending on its node_id
-    // Nodes have networks attached to them
-
-    set_edge_bidir(network, 0, 1, 1);
-    set_edge_bidir(network, 0, 2, 3);
-    set_edge_bidir(network, 4, 3, 3);
-    set_edge(network, 1, 2, 4);
-    set_edge(network, 3, 2, 2);
-    set_edge(network, 2, 3, 1);
-
-    struct bellman_results res = bellman_ford(network, 1);
+    struct parsing_output * G = NULL;
+    G = data_from_file();
 
 
-    for (int i = 0; i < res.size; i++)
-    {
-        printf("Node %i distance %i previous hop %i\n", i, res.distance[i], res.predecessor[i]);
-    }
 
-    int as_map[] = {2137, 666, 42, 55, 11};
-
-    struct router * rtr = generate_routing_info(666, network, as_map, "Ciechocinek");
+    struct router * rtr = generate_routing_info(G->as_map[0], G->netgraph, G->as_map, G->names[0]);
 
     describe_router(rtr);
 
+
+    free_graph(G->netgraph);
+
+    for (int i = 0; i < G->node_amount; i++)
+    {
+        free(G->names[i]);
+    }
+
     free_router(rtr);
 
-    free(res.distance);
-    free(res.predecessor);
-
-    free_graph(network);
+    free(G->names);
+    free(G->as_map);
+    free(G);
 
     return 0;
 }

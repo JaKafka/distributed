@@ -23,7 +23,7 @@ struct router *generate_routing_info(int as_number, struct graph *src_net, int *
     rtr->as_number = as_number;
     rtr->tracked_nodes = src_net->nodes;
 
-    rtr->name = (char *)malloc(strlen(name));
+    rtr->name = (char *)malloc(strlen(name) + 1);
     strcpy(rtr->name, name);
 
     rtr->as_map = (int *)malloc(sizeof(int) * src_net->nodes);
@@ -97,7 +97,7 @@ void describe_router(struct router *rtr)
     {
         if (i == rtr->next_hop[i] && rtr->as_map[i] != rtr->as_number)
         {
-            printf(" PEER %i DIST %i\n", rtr->as_map[i], rtr->distance[i]);
+            printf("UTILIZED PEER %i DIST %i\n", rtr->as_map[i], rtr->distance[i]);
         }
     }
 
