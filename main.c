@@ -1,15 +1,26 @@
+/**
+ * @file main.c
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief Bellman-Ford distributed implementation using MPI
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
+#include "mpi.h"
 #include "stdio.h"
+
+#include "configchain.h"
 #include "graph.h"
-#include "bellford.h"
+
 #include "router.h"
 #include "stdlib.h"
 #include "string.h"
-#include "configchain.h"
-
 
 
 /*
-
 node 0 parsuje config
 dostaje parsing output i na jego podstawie przesyła dalej
 
@@ -30,39 +41,105 @@ przesyłany jest graf
 nodey liczą rzeczy i zapisują do plików
 
 free()
-
-
-
-
 */
 
+#define MAX_NODES 100
 
 
-int main()
+int main(int argc, char **argv)
 {
+    MPI_Init(&argc, &argv);
 
-    struct parsing_output * G = NULL;
-    G = data_from_file();
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    int router_count;
+    int *as_map = NULL;
+    int *names_length = NULL;
+    char **names = NULL;
 
+    struct graph *netgraph = NULL;
+    
 
-    struct router * rtr = generate_routing_info(G->as_map[0], G->netgraph, G->as_map, G->names[0]);
-
-    describe_router(rtr);
-
-
-    free_graph(G->netgraph);
-
-    for (int i = 0; i < G->node_amount; i++)
+    if (rank == 0)
     {
-        free(G->names[i]);
+        struct parsing_output *temp = data_from_file(argv[1]);
+
+        router_count = temp->node_amount;
+        as_map = temp->as_map;
+        names = temp->names;
+
+        names_length = malloc(sizeof(int) * router_count);
+
+        for (int i = 0; i < router_count; i++)
+        {
+            names_length[i] = strlen(names[i]);
+        }
+
+        netgraph = temp->netgraph;
     }
 
-    free_router(rtr);
+    // Workery muszą wiedzieć ile jest danych do alokacji
+    // addr, count, size, node_id from, comms
+    MPI_Bcast(&router_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    free(G->names);
-    free(G->as_map);
-    free(G);
+    // Tylko zwykłe workery, nie mają gotowych danych
+    if (as_map == NULL)
+    {
+        as_map = malloc(sizeof(int) * router_count);
+        names_length = malloc(sizeof(int) * router_count);
+        names = malloc(sizeof(char*) * router_count);
+    }
 
+    // Prześlij informacje o rozmiarach nazw oraz mapowanie AS
+    MPI_Bcast(as_map, router_count, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(names_length, router_count, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // Przygotowanie miejsca w workerach na nazwy
+    if (rank != 0)
+    {
+        for (int i = 0; i < router_count; i++)
+        {
+            names[i] = malloc(sizeof(char) * names_length[i] + 1);
+        }
+    }
+
+    // Prześlij nazwy
+    for (int i = 0; i < router_count; i++)
+    {
+        MPI_Bcast(names[i], names_length[i] + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
+    
+    // Prześlij graf
+
+    if (netgraph == NULL)
+    {
+        netgraph = init_graph(router_count);
+    }
+
+    MPI_Bcast(netgraph->costs, router_count * router_count, MPI_INT, 0, MPI_COMM_WORLD);
+    netgraph->nodes = router_count;
+
+    // Each process computes routing information for its assigned nodes
+    for (int i = rank; i < router_count; i += size)
+    {
+        struct router * rtr = generate_routing_info(as_map[i], netgraph, as_map, names[i]);
+        describe_router(rtr);
+        free_router(rtr);
+    }
+
+    free_graph(netgraph);
+
+    for (int i = 0; i < router_count; i++)
+    {
+        free(names[i]);
+    }
+
+    free(names);
+    free(as_map);
+    free(names_length);
+
+    MPI_Finalize();
     return 0;
 }

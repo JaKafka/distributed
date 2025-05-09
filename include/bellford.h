@@ -1,3 +1,14 @@
+/**
+ * @file bellford.h
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief Bellman-Ford algorithm implementation
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #ifndef BELLFORD_H
 #define BELLFORD_H
 
@@ -8,12 +19,26 @@
 #define INFINITY 9999
 #define NULL_PREDECESSOR -1
 
+/**
+ * @brief struct representing the results of the Bellman-Ford algorithm
+ * 
+ * @param distance array of distances from the source node to each node
+ * @param predecessor array of predecessors for each node
+ * @param size number of nodes in the graph
+ */
 struct bellman_results {
     int *distance;
     int *predecessor;
     int size;
 };
 
+/**
+ * @brief function implementing the Bellman-Ford algorithm
+ * 
+ * @param G pointer to the graph
+ * @param source_id ID of the source node
+ * @return struct bellman_results results of the algorithm
+ */
 struct bellman_results bellman_ford(struct graph *G, int source_id)
 {
 

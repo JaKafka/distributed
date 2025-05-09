@@ -1,3 +1,14 @@
+/**
+ * @file router.h
+ * @author Jakub Kawka, Marcin Kiżewski
+ * @brief router representation implementation for the Bellman-Ford algorithm
+ * @version 0.1
+ * @date 2025-05-05
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #ifndef ROUTER_H
 #define ROUTER_H
 
@@ -6,6 +17,16 @@
 #include "string.h"
 #include "stdlib.h"
 
+/**
+ * @brief structure representing a router
+ * 
+ * @param name name of the router
+ * @param as_number AS number of the router
+ * @param as_map array mapping node IDs to AS numbers
+ * @param next_hop array mapping node IDs to the next hop node IDs
+ * @param distance array of distances to each node
+ * @param tracked_nodes number of nodes in the network
+ */
 struct router
 {
     char *name;
@@ -16,6 +37,15 @@ struct router
     int tracked_nodes; // Amount of nodes in the network
 };
 
+/**
+ * @brief function generating routing information for a router using the Bellman-Ford algorithm
+ * 
+ * @param as_number AS number of the router
+ * @param src_net pointer to the source network graph
+ * @param as_map array mapping node IDs to AS numbers
+ * @param name name of the router
+ * @return struct router* pointer to the generated router structure
+ */
 struct router *generate_routing_info(int as_number, struct graph *src_net, int *as_map, const char *name)
 {
     struct router *rtr = (struct router *)malloc(sizeof(struct router));
@@ -89,6 +119,12 @@ struct router *generate_routing_info(int as_number, struct graph *src_net, int *
     return rtr;
 }
 
+/**
+ * @brief function to describe/pretty print the routing information of a router
+ * @warning This function creates a file with the routing information as well
+ * 
+ * @param rtr pointer to the router structure to be described
+ */
 void describe_router(struct router *rtr)
 {
 
@@ -120,6 +156,11 @@ void describe_router(struct router *rtr)
     fclose(fp);
 }
 
+/**
+ * @brief function to free the memory allocated for a router structure
+ * 
+ * @param rtr pointer to the router structure to be freed
+ */
 void free_router(struct router *rtr)
 {
     free(rtr->name);

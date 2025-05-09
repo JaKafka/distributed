@@ -13,6 +13,8 @@ endif ()
 set(CMAKE_BUILD_TYPE Debug) #Release
 set(CMAKE_C_STANDARD 11)
 
+find_package(MPI)
+include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
 ### wersja z wszystkim w mainie
 set(INCLUDES ${PROJECT_SOURCE_DIR}/include)
@@ -23,6 +25,9 @@ file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.c")
 # add_library(...)
 
 add_executable(${PROJECT_NAME} main.c ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} ${MPI_C_LIBRARIES})
+
 #target_link_libraries(...)
 
 add_custom_target(run ./main)
